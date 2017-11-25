@@ -1,0 +1,629 @@
+O programa original começará com uma classe bem simples.
+
+1 - Criando o primeiro teste para a classe Avaliador (SLIDE 7)
+	@Test
+	public void deveEntenderLancesEmQualquerOrdem() {
+		// cenario: 3 lances 
+		Usuario joao = new Usuario("Joao");
+		Usuario jose = new Usuario("José");
+		Usuario maria = new Usuario("Maria");
+		Leilao leilao = new Leilao("Playstation 3 Novo");
+		leilao.propoe(new Lance(joao, 300.0));
+		leilao.propoe(new Lance(jose, 400.0));
+		leilao.propoe(new Lance(maria, 250.0));
+		// executando a ação
+		Avaliador leiloeiro = new Avaliador();
+		leiloeiro.avalia(leilao);
+		// exibindo a saída
+		Assert.assertEquals(400.0, leiloeiro.getMaiorLance(), 0.0001);
+		Assert.assertEquals(250.0, leiloeiro.getMenorLance(), 0.0001);
+	}
+
+	@Test
+	public void deveEntenderLancesEmOrdemCrescente() {
+		// cenario: 3 lances em ordem crescente
+		Usuario joao = new Usuario("Joao");
+		Usuario jose = new Usuario("José");
+		Usuario maria = new Usuario("Maria");
+		Leilao leilao = new Leilao("Playstation 3 Novo");
+		leilao.propoe(new Lance(maria, 250.0));
+		leilao.propoe(new Lance(joao, 300.0));
+		leilao.propoe(new Lance(jose, 400.0));
+		// executando a ação
+		Avaliador leiloeiro = new Avaliador();
+		leiloeiro.avalia(leilao);
+		// exibindo a saída
+		Assert.assertEquals(400.0, leiloeiro.getMaiorLance(), 0.0001);
+		Assert.assertEquals(250.0, leiloeiro.getMenorLance(), 0.0001);
+	}
+
+	@Test
+	public void deveEntenderLancesEmOrdemDecrescente() {
+		Usuario joao = new Usuario("Joao");
+		Usuario jose = new Usuario("José");
+		Usuario maria = new Usuario("Maria");
+		Leilao leilao = new Leilao("Playstation 3 Novo");
+		leilao.propoe(new Lance(jose, 400.0));
+		leilao.propoe(new Lance(joao, 300.0));
+		leilao.propoe(new Lance(maria, 250.0));
+		// executando a ação
+		Avaliador leiloeiro = new Avaliador();
+		leiloeiro.avalia(leilao);
+		// exibindo a saída
+		Assert.assertEquals(400.0, leiloeiro.getMaiorLance(), 0.0001);
+		Assert.assertEquals(250.0, leiloeiro.getMenorLance(), 0.0001);
+	}
+	
+
+
+-------------------------------------------------------------------------------
+2 - Exercício: Criar um Leilao com apenas um lance e registrar que este lance é o maior e o menor valor apresentado.
+
+@Test
+	public void deveAceitarLancesUnicos() {
+		Usuario joao = new Usuario("Joao");
+		Leilao leilao = new Leilao("Playstation 3 Novo");
+		leilao.propoe(new Lance(joao, 300.0));
+		// executando a ação
+		Avaliador leiloeiro = new Avaliador();
+		leiloeiro.avalia(leilao);
+		// exibindo a saída
+		Assert.assertEquals(300.0, leiloeiro.getMaiorLance(), 0.0001);
+		Assert.assertEquals(300.0, leiloeiro.getMenorLance(), 0.0001);
+	}
+	
+
+-------------------------------------------------------------------------------
+3 - Unificar códigos duplicados e usar a notação @Before. (SLIDE 17)
+
+//	private Usuario joao;
+//	private Usuario jose;
+//	private Usuario maria;
+//	private Avaliador leiloeiro;
+	
+//	@Before
+//	public void criaObjetos() {
+//		this.leiloeiro = new Avaliador();
+//		this.joao = new Usuario("João");
+//		this.jose = new Usuario("José");
+//		this.maria = new Usuario("Maria");
+//	}
+
+- Criando um Test Data Builder
+	//TestDataBuilder
+//	Leilao leilao = new CriadorDeLeilao()
+//			.para("Playstation 3 Novo")
+//			.lance(joao, 100.0)
+//			.lance(maria, 200.0)
+//			.lance(joao, 300.0)
+//			.lance(maria, 400.0)
+//			.constroi();
+
+
+public class CriadorDeLeilao {
+	private Leilao leilao;
+
+	public CriadorDeLeilao() {
+	}
+
+	public CriadorDeLeilao para(String descricao) {
+		this.leilao = new Leilao(descricao);
+		return this;
+	}
+
+	public CriadorDeLeilao lance(Usuario usuario, double valor) {
+		leilao.propoe(new Lance(usuario, valor));
+		return this;
+	}
+
+	public Leilao constroi() {
+		return leilao;
+	}
+
+	public CriadorDeLeilao naData(Calendar data) {
+		leilao.setDataAbertura(data);
+		return this;
+	}
+}
+
+-------------------------------------------------------------------------------
+
+4 - Criando um teste que verifique se uma exceção foi lançada (SLIDE 19).
+	
+	//Na classe Avaliador:
+
+	public void avalia(Leilao leilao) {
+		// lançando a exceção
+		if (leilao.getLances().size() == 0)
+			throw new RuntimeException("Não é possível avaliar um leilão sem lances");
+		for (Lance lance : leilao.getLances()) {
+			if (lance.getValor() > maiorDeTodos) {
+				maiorDeTodos = lance.getValor();
+			} else if (lance.getValor() < menorDeTodos) {
+				menorDeTodos = lance.getValor();
+			}
+		}
+	}
+
+	//Na classe AvaliadorTest
+	@Test(expected=RuntimeException.class)
+	public void naoDeveAvaliarLeilaoSemNenhumLanceDado() {
+		Leilao leilao = new Leilao("Playstation 3 Novo");
+		Avaliador leiloeiro = new Avaliador();
+		leiloeiro.avalia(leilao);
+	}
+
+
+-------------------------------------------------------------------------------
+5 - Criar uma suíte de testes
+
+package br.org.leofernandesmo.leiloesvvet.model;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
+@RunWith(Suite.class)
+@SuiteClasses({ AvaliadorTest.class, LanceTest.class })
+public class AllTests {
+
+}
+
+-------------------------------------------------------------------------------
+
+6 - Separando a suíte de testes por categoria
+- Criar as interfaces
+
+package br.org.leofernandesmo.leiloesvvet.model;
+
+public interface LocalTest {
+
+}
+
+
+package br.org.leofernandesmo.leiloesvvet.model;
+
+public interface ServidorTest {
+
+}
+
+- Anotar os testes 
+
+@Category(LocalTest.class)
+@Test
+	public void deveEntenderLancesEmOrdemDecrescente() {
+		Usuario joao = new Usuario("Joao");
+		Usuario jose = new Usuario("José");
+		Usuario maria = new Usuario("Maria");
+		Leilao leilao = new Leilao("Playstation 3 Novo");
+		leilao.propoe(new Lance(jose, 400.0));
+		leilao.propoe(new Lance(joao, 300.0));
+		leilao.propoe(new Lance(maria, 250.0));
+		// executando a ação
+		Avaliador leiloeiro = new Avaliador();
+		leiloeiro.avalia(leilao);
+		// exibindo a saída
+		Assert.assertEquals(400.0, leiloeiro.getMaiorLance(), 0.0001);
+		Assert.assertEquals(250.0, leiloeiro.getMenorLance(), 0.0001);
+	}
+
+
+- Alterar a SUite de Tetes	
+@RunWith(Category.class)
+@IncludeCategory({LocalTest.class, ServidorTest.class})
+@SuiteClasses({ AvaliadorTest.class, LanceTest.class })
+public class AllTests {
+
+}
+
+-------------------------------------------------------------------------------
+
+7 - Exercício
+
+package br.org.leofernandesmo.leiloesvvet.model;
+
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
+public class LeilaoTest {
+
+	@Test
+	public void deveReceberUmLance() {
+		Leilao leilao = new Leilao("Macbook Pro 15");
+		assertEquals(0, leilao.getLances().size());
+		leilao.propoe(new Lance(new Usuario("Steve Jobs"), 2000));
+		assertEquals(1, leilao.getLances().size());
+		//assertEquals(2000, leilao.getLances().get(0).getValor(), 0.00001);
+	}
+
+	@Test
+	public void deveReceberVariosLances() {
+		Leilao leilao = new Leilao("Macbook Pro 15");
+		leilao.propoe(new Lance(new Usuario("Steve Jobs"), 2000));
+		leilao.propoe(new Lance(new Usuario("Steve Wozniak"), 3000));
+		assertEquals(2, leilao.getLances().size());
+		//assertEquals(2000, leilao.getLances().get(0).getValor(), 0.00001);
+		//assertEquals(3000, leilao.getLances().get(1).getValor(), 0.00001);
+	}
+
+	@Test
+	public void naoDeveAceitarDoisLancesSeguidosDoMesmoUsuario() {
+		Leilao leilao = new Leilao("Macbook Pro 15");
+		Usuario steveJobs = new Usuario("Steve Jobs");
+		leilao.propoe(new Lance(steveJobs, 2000));
+		leilao.propoe(new Lance(steveJobs, 3000));
+		assertEquals(1, leilao.getLances().size());
+		assertEquals(2000, leilao.getLances().get(0).getValor(), 0.00001);
+	}
+
+	@Test
+	public void naoDeveAceitarMaisDoQue5LancesDeUmMesmoUsuario() {
+		Leilao leilao = new Leilao("Macbook Pro 15");
+		Usuario steveJobs = new Usuario("Steve Jobs");
+		Usuario billGates = new Usuario("Bill Gates");
+		leilao.propoe(new Lance(steveJobs, 2000));
+		leilao.propoe(new Lance(billGates, 3000));
+		leilao.propoe(new Lance(steveJobs, 4000));
+		leilao.propoe(new Lance(billGates, 5000));
+		leilao.propoe(new Lance(steveJobs, 6000));
+		leilao.propoe(new Lance(billGates, 7000));
+		leilao.propoe(new Lance(steveJobs, 8000));
+		leilao.propoe(new Lance(billGates, 9000));
+		leilao.propoe(new Lance(steveJobs, 10000));
+		leilao.propoe(new Lance(billGates, 11000));
+		// deve ser ignorado
+		leilao.propoe(new Lance(steveJobs, 12000));
+		assertEquals(10, leilao.getLances().size());
+		int ultimo = leilao.getLances().size() - 1;
+		Lance ultimoLance = leilao.getLances().get(ultimo);
+		assertEquals(11000.0, ultimoLance.getValor(), 0.00001);
+	}
+}
+
+- Altera a classe Leilao
+
+	public void propoe(Lance lance) {
+		if (lances.isEmpty() || podeDarLance(lance.getUsuario())){
+			this.lances.add(lance);
+		}
+	}
+	
+	private boolean podeDarLance(Usuario usuario) {
+		return (!ultimoLanceDado().getUsuario().equals(usuario) && 
+				qtdLancesDo(usuario) < 5);
+	}
+
+	private int qtdLancesDo(Usuario usuario) {
+		int total = 0;
+		for (Lance l : lances) {
+			if(l.getUsuario().equals(usuario))
+				total++;
+		}
+		return total;
+	}
+	
+	
+
+	private Lance ultimoLanceDado() {
+		return lances.get(lances.size() - 1);
+	}
+
+-------------------------------------------------------------------------------
+
+8 - MockObjects - EncerradorLeilaoTest
+
+- Criando o teste para a classe EncerradorLeilao
+public class EncerradorDeLeilaoTest {
+	@Test
+	public void deveEncerrarLeiloesQueComecaramUmaSemanaAtras() {
+		Calendar antiga = Calendar.getInstance();
+		antiga.set(1999, 1, 20);
+		Leilao leilao1 = new CriadorDeLeilao().para("TV de plasma").naData(antiga).constroi();
+		Leilao leilao2 = new CriadorDeLeilao().para("Geladeira").naData(antiga).constroi();
+		LeilaoDao dao = new LeilaoDao(); //Repare que precisamos instanciar o DAO aqui... alto acoplamento
+		dao.salva(leilao1);
+		dao.salva(leilao2);
+		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(dao);
+		encerrador.encerra();
+		// busca no banco a lista de encerrados
+		List<Leilao> encerrados = dao.encerrados();
+		// vamos conferir tambem o tamanho da lista!
+		assertEquals(2, encerrados.size());
+		assertTrue(encerrados.get(0).isEncerrado());
+		assertTrue(encerrados.get(1).isEncerrado());
+	}
+}
+
+
+- Agora vamos criar o Mock (LeilaoDaoFalso)
+public class LeilaoDaoFalso {
+	private static List<Leilao> leiloes = new ArrayList<Leilao>();
+
+	public void salva(Leilao leilao) {
+		leiloes.add(leilao);
+	}
+
+	public List<Leilao> encerrados() {
+		List<Leilao> filtrados = new ArrayList<Leilao>();
+		for (Leilao leilao : leiloes) {
+			if (leilao.isEncerrado())
+				filtrados.add(leilao);
+		}
+		return filtrados;
+	}
+
+	public List<Leilao> correntes() {
+		List<Leilao> filtrados = new ArrayList<Leilao>();
+		for (Leilao leilao : leiloes) {
+			if (!leilao.isEncerrado())
+				filtrados.add(leilao);
+		}
+		return filtrados;
+	}
+
+	public void atualiza(Leilao leilao) {
+		/* faz nada! */ }
+}
+
+- Antes de rodar o teste com LeilaoDaoFalso, precisamos atualizar as dependencias.
+  Ele vai precisar extender de LeilaoDao ou precisará mudar na classe EncerradorLeilao 
+
+- Agora vamos usar um framework específico para MockObjects
+  Mockito
+- Antes precisa adicionar a dependencia no Maven
+---- API do Maven:
+    validate: valida que os ‘poms‘ dos projetos involvidos estão corretamente escritos e que todas as informações necessárias para o build estão presentes;
+    compile: compila todos os códigos do projeto, inclusive os códigos das classes de teste;
+    test: roda os testes que estão em ‘src/test/java‘, e certifica-se que todos estão passando, caso contrário o build é interrompido;
+    package: usa o código compilado e testado que está em ‘src/main/java‘ e cria um arquivo reusável, por exemplo jar;
+    integration-test: nesta fase serão rodados os testes que necessitam do jar do projeto ‘deploiado‘ para serem rodados;
+    verify: roda as verificações necessárias para se certificar que os pacotes gerados estão corretos e passam nos critérios de qualidade;
+    install: copia o arquivo gerado para o repositório local para que esteja disponível localmente para outros projetos;
+    deploy: copia o arquivo gerado para um repositório na rede ou remoto, para que esteja disponível para outros desenvolvedores.
+
+public class EncerradorDeLeilaoTest {
+	@Test
+	public void deveEncerrarLeiloesQueComecaramUmaSemanaAtras() {
+		Calendar antiga = Calendar.getInstance();
+		antiga.set(1999, 1, 20);
+		Leilao leilao1 = new CriadorDeLeilao().para("TV de plasma").naData(antiga).constroi();
+		Leilao leilao2 = new CriadorDeLeilao().para("Geladeira").naData(antiga).constroi();
+		List<Leilao> leiloesAntigos = Arrays.asList(leilao1, leilao2);
+		// criamos o mock
+		LeilaoDao daoFalso = mock(LeilaoDao.class);
+		// ensinamos ele a retornar a lista de leilões antigos
+		when(daoFalso.correntes()).thenReturn(leiloesAntigos);
+		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso);
+		encerrador.encerra();
+		assertTrue(leilao1.isEncerrado());
+		assertTrue(leilao2.isEncerrado());
+		assertEquals(2, encerrador.getTotalEncerrados());
+	}
+}
+
+- Vamos adicionar um novo teste para verificar se um método foi invocado.
+  No caso verificaremos se o método atualiza foi invocao.
+	@Test
+	public void deveAtualizarLeiloesEncerrados() {
+		Calendar antiga = Calendar.getInstance();
+		antiga.set(1999, 1, 20);
+		Leilao leilao1 = new CriadorDeLeilao().para("TV de plasma").naData(antiga).constroi();
+		LeilaoDao daoFalso = mock(LeilaoDao.class);
+		when(daoFalso.correntes()).thenReturn(Arrays.asList(leilao1));
+		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso);
+		encerrador.encerra();
+		// verificando que o método atualiza foi realmente invocado!
+		verify(daoFalso).atualiza(leilao1); //Comente a chamada do método atualiza() em EncerradorLeilao 
+	}
+
+//Ainda podemos verificar quantas vezes ele foi invocado.
+verify(daoFalso, times(1)).atualiza(leilao1); //Tente mudar para 2...
+// Ainda tem os métodos atLeast(numero) e atMost(numero) 
+
+
+
+-------------------------------------------------------------------------------
+9 - Exercicio para criar uma nova dependencia. Enviar um email apos encerrar um Leilao.
+
+public interface Carteiro {
+    void envia(Leilao leilao);
+}
+
+public class EncerradorDeLeilao {
+	private int total = 0;
+	private final LeilaoDao dao;
+	private final Carteiro carteiro;
+
+	public EncerradorDeLeilao(LeilaoDao d, Carteiro c) {
+		super();
+		dao = d;
+		// guardamos o carteiro como atributo da classe
+		this.carteiro = c;
+	}
+
+	public void encerra() {
+		List<Leilao> todosLeiloesCorrentes = dao.correntes();
+		for (Leilao leilao : todosLeiloesCorrentes) {
+			if (comecouSemanaPassada(leilao)) {
+				leilao.encerra();
+				total++;
+				dao.atualiza(leilao);
+				// agora enviamos por email tambem!
+				carteiro.envia(leilao);
+			}
+		}
+	}
+
+	private boolean comecouSemanaPassada(Leilao leilao) {
+		return diasEntre(leilao.getDataAbertura(), Calendar.getInstance()) >= 7;
+	}
+
+	private int diasEntre(Calendar inicio, Calendar fim) {
+		Calendar data = (Calendar) inicio.clone();
+		int diasNoIntervalo = 0;
+		while (data.before(fim)) {
+			data.add(Calendar.DAY_OF_MONTH, 1);
+			diasNoIntervalo++;
+		}
+		return diasNoIntervalo;
+	}
+
+	public int getTotalEncerrados() {
+		return total;
+	}
+}
+
+- Nos testes deve-se fazer algo como:
+Carteiro carteiroFalso = mock(Carteiro.class);	
+EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso, carteiroFalso);
+
+- Extra:
+Simulando uma exceção no sistema.
+Digamos que o método encerra() pode dar exceção quando for invocado.
+
+public void encerra() {
+List<Leilao> todosLeiloesCorrentes = dao.correntes();
+for (Leilao leilao : todosLeiloesCorrentes) {
+try {
+if (comecouSemanaPassada(leilao)) {
+leilao.encerra();
+total++;
+dao.atualiza(leilao);
+carteiro.envia(leilao);
+}
+}
+catch(Exception e) {
+// salvo a exceção no sistema de logs
+// e o loop continua!
+}
+}
+}
+
+..... então alteramos o mock para simular uma chamada com exceção.
+
+@Test
+	public void deveContinuarAExecucaoMesmoQuandoDaoFalha() {
+		Calendar antiga = Calendar.getInstance();
+		antiga.set(1999, 1, 20);
+		Leilao leilao1 = new CriadorDeLeilao().para("TV de plasma").naData(antiga).constroi();
+		Leilao leilao2 = new CriadorDeLeilao().para("Geladeira").naData(antiga).constroi();
+		LeilaoDao daoFalso = mock(LeilaoDao.class);
+		when(daoFalso.correntes()).thenReturn(Arrays.asList(leilao1, leilao2));
+		doThrow(new RuntimeException()).when(daoFalso).atualiza(leilao1);
+		EnviadorDeEmail carteiroFalso = mock(EnviadorDeEmail.class);
+		EncerradorDeLeilao encerrador = new EncerradorDeLeilao(daoFalso, carteiroFalso);
+		encerrador.encerra();
+		verify(daoFalso).atualiza(leilao2);
+		verify(carteiroFalso).envia(leilao2);
+	}
+
+...Veja que ensinamos nosso mock a lançar uma exceção quando
+o leilao1 for passado; mas nada deve acontecer com o
+leilao2 Pronto! Garantimos que nosso sistema continua funcionando
+mesmo se uma exceção ocorrer! É comum termos tratamentos
+diferentes dada uma exceção; o Mockito faz com que esses testes
+sejam fáceis de serem escritos! Sem ele, como faríamos esse teste?
+Desligaríamos o MySQL para simular banco de dados fora do ar?
+Mocks realmente são úteis.
+
+O que devemos mockar?
+http://www.aniche.com.br/2014/06/mockar-ou-nao-mockar/.
+
+-------------------------------------------------------------------------
+10 - Teste de Integração
+[Lembrar alunos que precisa alterar o POM e resolver as dependencias]
+- Prmeiro cria a classe de consulta
+ 
+public class ConsultaFilmeCliente {
+	public void busca(String url, String apikey, String filme) throws Exception {
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+		HttpGet httpget = new HttpGet(url + "?apikey=" + apikey + "&t=" + filme);
+		// HttpGet httpget = new
+		// HttpGet("http://www.omdbapi.com/?apikey=a0929a14&t=a%20vida%20e%20bela");
+		CloseableHttpResponse response = httpclient.execute(httpget);
+		try {
+			HttpEntity entity = response.getEntity();
+			if (entity != null) {
+				long len = entity.getContentLength();
+				if (len != -1 && len < 2048) {
+					System.out.println(EntityUtils.toString(entity));
+				} else {
+					System.out.println(EntityUtils.toString(entity));
+				}
+			}
+		} finally {
+			response.close();
+		}
+	}
+	
+	public static void main(String[] args) {
+		try {
+			new ConsultaFilmeCliente().busca("http://www.omdbapi.com/", "a0929a14", "a+vida+e+bela");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+
+- Agora cria o teste para verificar esta integração
+public class ConsultaFilmeClienteTest {
+
+	@Test
+	public void deveRetornarOFilmeCorreto() {
+		ConsultaFilmeCliente cliente = new ConsultaFilmeCliente();
+		try {
+			String json = cliente.busca("http://www.omdbapi.com/", "a0929a14", "a+vida+e+bela");
+			assertTrue(json.contains("A Vida É Bela"));
+		} catch (Exception e) {
+			fail("Não deveria chegar aqui!");
+		}
+	}
+	
+	@Test
+	public void deveDarErroNaConsultaDevidoFilmeErrado() {
+		ConsultaFilmeCliente cliente = new ConsultaFilmeCliente();
+		try {
+			String json = cliente.busca("http://www.omdbapi.com/", "a0929a14", "a vida e bela");
+			fail("Não deveria chegar aqui!");
+		} catch (Exception e) {
+			assertTrue(true);
+		}
+	}	
+}
+
+-----------------------------------------------------------------------
+
+11 - Exemplo de funcionamento do Selenium
+
+Para usar o Selenium com o Firefox precisa baixar o Driver correto em: https://github.com/mozilla/geckodriver/releases
+Descompactar na pasta onde a aplicacao sera executada.
+
+--Classe para fazer o teste de exemplo
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+
+public class TesteSistemaAutomatizado {
+	static WebDriver driver;
+
+	public static void main(String[] args) {
+		System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
+		// abre firefox
+		driver = new FirefoxDriver();
+		driver.get("http://www.google.com.br/");
+		// digita no campo com nome "q" do google
+		WebElement campoDeTexto = driver.findElement(By.name("q"));
+		campoDeTexto.sendKeys("Caelum");
+		// submete o form
+		campoDeTexto.submit();
+	}
+}
+
+`------------------------------------------------------------------
+
+12 - Apache JMeter
+http://www.decom.ufop.br/imobilis/metodologia-de-testes-tutorial-jmeter-para-testes-de-performance-em-plataforma-web/
+

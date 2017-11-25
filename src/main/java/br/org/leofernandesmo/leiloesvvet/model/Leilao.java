@@ -2,6 +2,8 @@ package br.org.leofernandesmo.leiloesvvet.model;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 public class Leilao {
@@ -11,8 +13,7 @@ public class Leilao {
 	private Calendar dataAbertura;
 	private boolean usado;
 	private List<Lance> lances;
-	
-	
+	private boolean isEncerrado;
 
 	public Leilao(String nome) {
 		super();
@@ -31,23 +32,23 @@ public class Leilao {
 	public void setNome(String nome) {
 		this.nome = nome;
 	}
-	
+
 	public String getNome() {
 		return nome;
 	}
-	
+
 	public void setValorInicial(Double valorInicial) {
 		this.valorInicial = valorInicial;
 	}
-	
+
 	public Double getValorInicial() {
 		return valorInicial;
 	}
-	
+
 	public void setUsuario(Usuario usuario) {
 		this.usuario = usuario;
 	}
-	
+
 	public Usuario getUsuario() {
 		return usuario;
 	}
@@ -67,9 +68,16 @@ public class Leilao {
 	public void setLances(List<Lance> lances) {
 		this.lances = lances;
 	}
-	
+
 	public void propoe(Lance lance) {
 		this.lances.add(lance);
 	}
 
+	public void encerra() {
+		isEncerrado = true;
+	}
+
+	public boolean isEncerrado() {
+		return isEncerrado;
+	}
 }
